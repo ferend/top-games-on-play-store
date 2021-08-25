@@ -1,0 +1,164 @@
+---
+title: "Top Games on Play Store EDA"
+author: "F. Eren Dalçık"
+date: "08 08 2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(haven)
+library(PerformanceAnalytics)
+library(corrplot)
+library(car)
+library(effects)
+library(dplyr)
+library(ggplot2)
+library(PerformanceAnalytics)
+library(plotrix)
+library(corrplot)
+```
+
+***
+
+**Table of Contents**
+
+1.    Introduction
+2.    Data Analysis and Exploration
+3.    Plots and Models
+      + Histogram
+      
+***
+
+# INTRODUCTION
+
+
+As it is known, Google Play Store allows many games to be downloaded by users. Thousands of users install millions of apps every day. The Play Store offers millions of applications in many categories to users for free or paid. I find this topic important for the game developers and studios. This research will help game development studios to pick their gerne to achieve more growth after launching. 
+
+With the dataset I acquired from [here](https://www.kaggle.com/dhruvildave/top-play-store-games) , I explained the questions that many developers wants to know before creating project plans and game type. 
+
+Questions such as target genre, play type, paid or free... In order to find answers to these questions we should analyze the user ratings given for the games. I must state that this analysis will be in the threshold of: higher user rating and attraction will result higher profit.
+
+I addition I will apply different regression models to forecast what has an effect on higher user rating so that developers can come up with the most profitable and successfull project for mobile game development.
+
+
+```{r echo= FALSE}
+
+storedata <- read.csv2("android-games.csv",stringsAsFactors = F, sep=",",dec=".")
+storedata <- subset (storedata, select = -rank)
+storedata <- na.omit(storedata)
+
+```
+
+
+
+# Data Analysis and Exploration
+
+
+
+```{r echo=FALSE}
+summary(storedata)
+```
+
+*In this dataset we have top 100 games of each category of games on Google Play Store along with their ratings and other data like price and number of installs. There are total 1730 observation and 14 variables.*
+
+*1: Title*
+
+*2: Total Rating Count*
+
+*3: Install*
+
+*4: Average Rating*
+
+*5: Growth in 30 days*
+
+*6: Growth in 60 days*
+
+*7: Price*
+
+*8: Category of the game*
+
+*9: 5 Star Rating Count*
+
+*10: 4 Star Rating Count*
+
+*11: 3 Star Rating Count*
+
+*12: 2 Star Rating Count*
+
+*13: 1 Star Rating Count*
+
+*14: Paid or Free*
+
+
+> **According to the data first thing we can analyze is the average rating of games. Game with minimum average rating is 2 and maximum is 4 which mean is very close to. This show that many of the users rated the game with 4 stars not 5. Most expensivest game in dataset is Minecraft with 7.49.**
+**It was seen that none of the columns in the dataset had null values.it was seen that none of the columns in the dataset had null values.**
+**The "installs" column is seen as an character even though it has numeric values. This column needs to be corrected. There are also games that has value in thousands but I removed them from the dataset to have better result.**
+
+
+```{r, echo=TRUE}
+ storedata$installs<-gsub("M","",as.character(storedata$installs))
+ storedata$installs <-  as.numeric(storedata$install)
+ storedata <- na.omit(storedata)
+ str(storedata)
+```
+
+*It should be implicated that the operation in the last chunk removes the "M" from the install counts from the installs row. Meaning; all of the installs are in millions*
+
+
+## Plots and Models
+
+***
+
+### Table of Game Categories With Their Frequency   
+
+```{r , echo=FALSE}
+w = table(storedata$category)
+t = as.data.frame(w)
+names(t)[1] = 'Categories'
+t
+```
+> As we can see out of 1712 most amount of top rated games are in genre of Card and Word. Trivia type of games are least rated genre. I also created a barplot of this table.
+
+
+```{r, echo=FALSE}
+barplot(prop.table(table(t)))
+```
+
+### Pie Chart of The Game Types
+
+```{r , echo=FALSE}
+observation_count <-  c(1712, 4)
+labels <-  c("Free","Paid")
+
+piepercent<- round(100*observation_count/sum(observation_count), 1)
+
+pie3D(observation_count,labels = labels,explode = 0, main = "Pie Chart of Free/Paid")
+```
+
+> We can see from the pie chart that very small amount of paid games makes it to top charts. Plans like free or freemium can be considered by developers since users do not want to pay big amounts for mobile games. Developers earn more with free games and it is more porfitable to collect revenue with ads.
+
+
+
+### Boxplot With Average Rating and Installs
+   
+
+```{r , echo=FALSE}
+boxplot(installs ~ average.rating ,
+data=storedata,
+main="Different boxplots for each rating",
+xlab="Average Rating",
+ylab="Installs in Million",
+ylim=c(0,150),
+col="orange",
+border="brown"
+)
+```
+
+
+> According to this boxplot as the install count increase average rating of the game increases which should be expected. All ratings median is somewhat in same value but average rating 4 has the biggest interquartile range.
+
+***
+
+
