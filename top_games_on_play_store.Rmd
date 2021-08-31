@@ -1,5 +1,5 @@
 ---
-title: "Top Games on Play Store EDA"
+title: "Top Games on Play Store EDA and Algorithms"
 author: "F. Eren Dalçık"
 date: "08 08 2021"
 output: html_document
@@ -11,13 +11,12 @@ library(tidyverse)
 library(haven)
 library(PerformanceAnalytics)
 library(corrplot)
-library(car)
 library(effects)
 library(dplyr)
 library(ggplot2)
-library(PerformanceAnalytics)
 library(plotrix)
-library(corrplot)
+library(randomForest)
+library(tree)
 ```
 
 ***
@@ -28,19 +27,26 @@ library(corrplot)
 2.    Data Analysis and Exploration
 3.    Plots and Models
       + Histogram
+      + Table of Categories
+      + Pie Chart
+      + Box Plot
+4.    Regression Models
+      + Predictor Effect Plot of Ratings And Installs
+5.    Random Forest Model
+6.    Conclusion
       
 ***
 
 # INTRODUCTION
 
 
-As it is known, Google Play Store allows many games to be downloaded by users. Thousands of users install millions of apps every day. The Play Store offers millions of applications in many categories to users for free or paid. I find this topic important for the game developers and studios. This research will help game development studios to pick their gerne to achieve more growth after launching. 
+As it is known, Google Play Store allows many games to be downloaded by users. Thousands of users install millions of apps every day. The Play Store offers millions of applications in many categories to users for free or paid. I find this topic important for game developers and studios. This research will help game development studios to pick their genre to achieve more growth after launching. 
 
-With the dataset I acquired from [here](https://www.kaggle.com/dhruvildave/top-play-store-games) , I explained the questions that many developers wants to know before creating project plans and game type. 
+With the dataset I acquired from [here](https://www.kaggle.com/dhruvildave/top-play-store-games), I explained the questions that many developers want to know before creating project plans and game types. 
 
-Questions such as target genre, play type, paid or free... In order to find answers to these questions we should analyze the user ratings given for the games. I must state that this analysis will be in the threshold of: higher user rating and attraction will result higher profit.
+Questions such as target genre, play type, paid or free... To find answers to these questions we should analyze the user ratings given for the games. I must state that this analysis will be on the threshold of higher user rating and attraction will result in higher profit.
 
-I addition I will apply different regression models to forecast what has an effect on higher user rating so that developers can come up with the most profitable and successfull project for mobile game development.
+I addition I will apply different regression models to forecast what affects higher user ratings so that developers can come up with the most profitable and successful project for mobile game development.
 
 
 ```{r echo= FALSE}
@@ -92,24 +98,28 @@ summary(storedata)
 *14: Paid or Free*
 
 
-> **According to the data first thing we can analyze is the average rating of games. Game with minimum average rating is 2 and maximum is 4 which mean is very close to. This show that many of the users rated the game with 4 stars not 5. Most expensivest game in dataset is Minecraft with 7.49.**
-**It was seen that none of the columns in the dataset had null values.it was seen that none of the columns in the dataset had null values.**
-**The "installs" column is seen as an character even though it has numeric values. This column needs to be corrected. There are also games that has value in thousands but I removed them from the dataset to have better result.**
+>According to the data first thing we can analyze is the average rating of games. Game with minimum average rating is 2 and maximum is 4 which means is very close to. This shows that many of the users rated the game with 4 stars, not 5. The most expensive game in the dataset is Minecraft with 7.49.
+It was seen that none of the columns in the dataset had null values.it was seen that none of the columns in the dataset had null values.
+The "installs" column is seen as a character even though it has numeric values. This column needs to be corrected. Some games have value in thousands but I removed them from the dataset to have a better result.
 
 
-```{r, echo=TRUE}
- storedata$installs<-gsub("M","",as.character(storedata$installs))
+```{r, echo=FALSE}
+storedata$installs<-gsub("M","",as.character(storedata$installs))
  storedata$installs <-  as.numeric(storedata$install)
  storedata <- na.omit(storedata)
+```
+ 
+ 
+```{r, echo=TRUE}
  str(storedata)
 ```
 
-*It should be implicated that the operation in the last chunk removes the "M" from the install counts from the installs row. Meaning; all of the installs are in millions*
+**It should be implicated that the operation in the last chunk removes the "M" from the install counts from the installs row. Meaning; all of the installs are in millions**
 
+***
 
 ## Plots and Models
 
-***
 
 ### Table of Game Categories With Their Frequency   
 
@@ -119,7 +129,7 @@ t = as.data.frame(w)
 names(t)[1] = 'Categories'
 t
 ```
-> As we can see out of 1712 most amount of top rated games are in genre of Card and Word. Trivia type of games are least rated genre. I also created a barplot of this table.
+> As we can see out of 1712 most amount of the top-rated games are in the genre of Card and Word. The trivia type of games is the least rated genre. I also created a barplot of this table.
 
 
 ```{r, echo=FALSE}
@@ -137,7 +147,7 @@ piepercent<- round(100*observation_count/sum(observation_count), 1)
 pie3D(observation_count,labels = labels,explode = 0, main = "Pie Chart of Free/Paid")
 ```
 
-> We can see from the pie chart that very small amount of paid games makes it to top charts. Plans like free or freemium can be considered by developers since users do not want to pay big amounts for mobile games. Developers earn more with free games and it is more porfitable to collect revenue with ads.
+> We can see from the pie chart that a very small amount of paid games makes it to the top charts. Plans like free or freemium can be considered by developers since users do not want to pay big amounts for mobile games. Developers earn more with free games and it is more profitable to collect revenue with ads.
 
 
 
@@ -160,5 +170,93 @@ border="brown"
 > According to this boxplot as the install count increase average rating of the game increases which should be expected. All ratings median is somewhat in same value but average rating 4 has the biggest interquartile range.
 
 ***
+
+***
+## Regression Models
+
+```{r , echo=TRUE}
+storedata <- storedata %>%                               
+  mutate(paid = replace(paid, paid == "True", 1))
+storedata <- storedata %>%                               
+  mutate(paid = replace(paid, paid == "False", 0))
+
+storedata$paid <-  as.numeric(storedata$paid)
+
+storedata_2 <- storedata[c(2:14)]
+
+```
+
+> To get better results in my OLS assumptions and other regression models I converted paid variable to a dummy variable with 1's and 0's and removed the names of the games from the dataset. Let's see how our plot looks like.
+
+```{r , echo=FALSE}
+train <- storedata_2[1:1000 , ]
+test <- storedata_2[1001:nrow(storedata_2),]
+```
+
+
+```{r , echo=TRUE}
+lm.fit <- lm(formula = installs  ~ . , data = train)
+summary(lm.fit)
+```
+
+*Before building an OLS model with the dataset, I split the dataset into two. I took the first 1000 observations and make the "train" dataset and the rest as a "test" dataset. I will be using both these two datasets in the following models but for the OLS I used a test dataset to predict installs.*
+
+> The most important part of the regression model output is the f-statistics part. It shows us that whether our model is significant or not. From looking at the p-value of the model we can say that our model is significant and there is a relation between the variables. Residual standard error provides us a measurement, standard error of the residuals. Both of the R-squared gives us the measurement of what % of the variance in response variable can be explained. Multiple R- squared shows us the amount of variation in the response variable by the predictor variable. Adjusted R-squared will not increase as we add more data to the dataset. If a model has too much difference between Adjusted and Multiple R-squared this means that the model may be overfitting in our case there is no such issue. In contrast, we can say that our variables can explain 72% of the variation in the installs of the games. Since it is a multiple (OLS) regression model we are more interested in the value of Adjusted R-squared. In Residuals they need to be symmetrically distributed in a good regression model (it seems they are!), we want a Median value as close to 0 as possible because it shows us our model is not skewed one way to another. 
+
+> After we are confident that our model is significant we can interpret our coefficients. Variables with the highest significance are "X1.star.ratings","X2.star.ratings","X4.star.ratings" ; and then "total.ratings" and "categoryGAME ADVENTURE" comes. Let's start with total ratings. The model shows us that a 1 unit change in the total rate of the game causes 3.75 units of positive install in that particular game which means if you gain 1 more increase in your total rating it will cause nearly 3 million installs! That is why studios and developers want us to rate their games. Although the direct effect of a 1 rating may seem impossible in 3 million installs that is because developers use ratings as an advertisement tool to gain more attraction. 
+If we look towards "X1.star.ratings" of the game 1 unit change in that variable causes a negative 4.24 change in installs. This means every 1-star rating in a game causes studios to lose up to 4 million installs which makes sense on contrary. The story is the same in 4-star ratings as well. The funny thing is adventure category is also significant but users seem to does not like the adventure category since it harms the installs of the game.
+
+### Predictor Effect Plot
+
+```{r , echo=FALSE}
+lm.fit2 <- lm(formula = installs ~ total.ratings + X4.star.ratings + X2.star.ratings + X1.star.ratings , data = train)
+plot(predictorEffects(lm.fit2))
+```
+*Effect of the rating observations in the dataset  to the installs can be analyzed from predictor effect plot.*
+
+
+```{r , echo=FALSE}
+ggplot(train,aes(y=total.ratings,x=installs))+geom_point()+geom_smooth(method="lm")
+```
+***
+
+## Random Forest Model
+
+
+```{r , echo=FALSE}
+cvstore <- train[sample(nrow(train)),]
+folds <- cut(seq(1,nrow(cvstore)),breaks=5,labels=FALSE)
+
+total_mse <- rep(NA,13)
+for (i in 1:12) {
+  mse <- rep(NA,5)
+  #5-fold cross validation
+  for (t in 1:5){
+    set.seed(123)
+    cv_test_index <- which(folds==t,arr.ind=TRUE)
+    cv_train <- train[-cv_test_index,]
+    cv_test <- train[cv_test_index,]
+    rf.store <- randomForest(installs~., data=train, mtry= i, ntree=500, importance=TRUE, na.action = na.omit)
+    pred <- predict(rf.store,newdata=cv_test)
+    mse[t] <- (1/nrow(cv_test))*sum((pred-cv_test$installs^2))
+  }
+  total_mse[i] <- mean(mse)
+}
+
+```
+
+```{r , echo=TRUE}
+importance(rf.store)
+varImpPlot(rf.store, type=2)
+```
+
+> Let's start explaining random forest model results with what is random forest is. Random Forest is one such very powerful ensembling machine learning algorithm which works by creating multiple decision trees and then combining the output generated by each of the decision trees. It combines the output of multiple decision trees and then finally come up with its output. It creates better results than the decision trees.
+
+>Random Forest is fitted with the number of variables from 1 to 13 which the model tries all predictors to make the regression with 5 fold cross-validation to find the variable importance. varImpPlot is the Dot chart of variable importance as measured by a Random Forest. Higher IncNodePurity values indicate more impact on game installs. According to this, the most important things to consider when to aim for more installs are 4-star ratings, 2-star ratings, and 1-star ratings which are in front of the 5-star rating. The category seems to have less impact on the installs price of the game does not have since we should remember that there is only 4 game with a price.
+
+***
+
+## Conclusion
+
 
 
