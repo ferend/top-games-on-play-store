@@ -6,7 +6,7 @@
 
 ## Project Explanation
 
-With the dataset I acquired from here, I explained the questions that many developers want to know before creating project plans and game types.
+With the dataset I acquired from [here](https://www.kaggle.com/dhruvildave/top-play-store-games), I explained the questions that many developers want to know before creating project plans and game types.
 
 Questions such as target genre, play type, paid or free… To find answers to these questions we should analyze the user ratings given for the games. I must state that this analysis will be on the threshold of higher user rating and attraction will result in higher profit.
 
