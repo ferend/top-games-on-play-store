@@ -258,5 +258,6 @@ varImpPlot(rf.store, type=2)
 
 ## Conclusion
 
+> For an advanced dataset like this, I tried to keep it simple with only data visualization and 2 different machine learning algorithms. First, in the Multiple Regression model, we saw that which variables have a positive or negative effect on the install count of the games. Second, in random forest model output gave us the most important attributes which Play Store provides to us. This is not a top-down complete project to work on as a game studio but as a game developer, I find these results inspiring. These results gave me the idea of what to focus on when starting to get feedback from the users via the Play Store. For example, it can be seen that users are willing to install games with more than 4 stars rather than 5 stars. So trying to build a better experience and game logic for at least a 4-star rating can be prioritized. I hope you enjoyed my project as much as I do, I hope I was able to make fewer mistakes and make things clear as possible, and as always thank you for your time! 
 
 
