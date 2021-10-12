@@ -12,7 +12,7 @@ Questions such as target genre, play type, paid or free… To find answers to th
 
 I addition I will apply different regression models to forecast what affects higher user ratings so that developers can come up with the most profitable and successful project for mobile game development.
 
-### Please download .html file for detailed discussion of my project
+***Please download .html file for detailed discussion of my project***
 
 ## Content
 
